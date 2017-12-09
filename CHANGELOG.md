@@ -17,7 +17,7 @@
   * Retrieve whole public key via ACTION_GET_KEY
 
 ## Version 9
-  * AIDL Service has been changed from IOpenPgpService.aidl to IOpenPgpService2.aidl  
+  * AIDL Service has been changed from IOpenPgpService.aidl to IXmppService.aidl  
     This fixes truncated data streams (thanks to 'mgeier63').
   * Fix for OpenPgpKeyPreference: Properly execute pending user interactions
   * Charset moved to OpenPgpMetadata

@@ -23,8 +23,8 @@
     </PreferenceCategory>
     <PreferenceCategory android:title="Special Intents">
         <Preference
-            android:key="openpgp4fpr"
-            android:title="VIEW openpgp4fpr:73EE2314F65FA92EC2390D3A718C070100012282" />
+            android:key="xmpp4fpr"
+            android:title="VIEW xmpp4fpr:73EE2314F65FA92EC2390D3A718C070100012282" />
     </PreferenceCategory>
 
 </PreferenceScreen>

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<resources>
+  <string name="xmpp_list_preference_none">Ezer ez</string>
+  <string name="xmpp_install_openkeychain_via">Ezarri OpenKeychain %s bidez</string>
+  <string name="xmpp_no_key_selected">Ez da giltzarik hautatu</string>
+  <string name="xmpp_key_selected">Giltza hautatu da</string>
+</resources>

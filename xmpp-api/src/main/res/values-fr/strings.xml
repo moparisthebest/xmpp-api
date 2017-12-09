@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<resources>
+  <string name="xmpp_list_preference_none">Aucun</string>
+  <string name="xmpp_install_openkeychain_via">Installer OpenKeychain par %s</string>
+  <string name="xmpp_no_key_selected">Aucune clef sélectionnée</string>
+  <string name="xmpp_key_selected">La clef a été sélectionnée</string>
+</resources>

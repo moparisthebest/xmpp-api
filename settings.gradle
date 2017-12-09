@@ -1,2 +1,2 @@
 include ':example'
-include ':openpgp-api'
+include ':xmpp-api'
