@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources>
   <string name="xmpp_list_preference_none">Ingen</string>
-  <string name="xmpp_install_openkeychain_via">Installera OpenKeychain via %s</string>
+  <string name="xmpp_install_via">Installera Conversations via %s</string>
 </resources>

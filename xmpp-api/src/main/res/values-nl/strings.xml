@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources>
   <string name="xmpp_list_preference_none">Geen</string>
-  <string name="xmpp_install_openkeychain_via">Installeer OpenKeychain via %s</string>
-  <string name="xmpp_no_key_selected">Geen sleutel geselecteerd</string>
-  <string name="xmpp_key_selected">Sleutel is geselecteerd</string>
+  <string name="xmpp_install_via">Installeer Conversations via %s</string>
+  <string name="xmpp_no_account_selected">Geen sleutel geselecteerd</string>
+  <string name="xmpp_account_selected">Sleutel is geselecteerd</string>
 </resources>

@@ -37,12 +37,11 @@ public class BaseActivity extends PreferenceActivity {
         addPreferencesFromResource(R.xml.base_preference);
 
         // find preferences
-        Preference openKeychainIntents = findPreference("intent_demo");
-        Preference openPgpApi = findPreference("xmpp_provider_demo");
+        Preference xmppApi = findPreference("xmpp_provider_demo");
         mProvider = (XmppAppPreference) findPreference("xmpp_provider_list");
         mKey = (XmppKeyPreference) findPreference("xmpp_key");
 
-        openPgpApi.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+        xmppApi.setOnPreferenceClickListener(new OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
                 startActivity(new Intent(BaseActivity.this, XmppApiActivity.class));

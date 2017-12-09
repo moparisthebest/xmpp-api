@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources>
   <string name="xmpp_list_preference_none">Ништа</string>
-  <string name="xmpp_install_openkeychain_via">Инсталирај Отворени кључарник преко %s</string>
-  <string name="xmpp_no_key_selected">Није изабран кључ</string>
-  <string name="xmpp_key_selected">Кључ је изабран</string>
+  <string name="xmpp_install_via">Инсталирај Отворени кључарник преко %s</string>
+  <string name="xmpp_no_account_selected">Није изабран кључ</string>
+  <string name="xmpp_account_selected">Кључ је изабран</string>
 </resources>

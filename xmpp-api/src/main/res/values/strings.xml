@@ -2,8 +2,8 @@
 <resources>
 
     <string name="xmpp_list_preference_none">None</string>
-    <string name="xmpp_install_openkeychain_via">Install OpenKeychain via %s</string>
-    <string name="xmpp_no_key_selected">No key selected</string>
-    <string name="xmpp_key_selected">Key has been selected</string>
+    <string name="xmpp_install_via">Install Conversations via %s</string>
+    <string name="xmpp_no_account_selected">No key selected</string>
+    <string name="xmpp_account_selected">Key has been selected</string>
 
 </resources>

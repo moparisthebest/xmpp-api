@@ -49,8 +49,8 @@ public class XmppKeyPreference extends Preference {
 
     @Override
     public CharSequence getSummary() {
-        return (mKeyId == NO_KEY) ? getContext().getString(R.string.xmpp_no_key_selected)
-                : getContext().getString(R.string.xmpp_key_selected);
+        return (mKeyId == NO_KEY) ? getContext().getString(R.string.xmpp_no_account_selected)
+                : getContext().getString(R.string.xmpp_account_selected);
     }
 
     private void updateEnabled() {
@@ -215,7 +215,7 @@ public class XmppKeyPreference extends Preference {
         // Save the instance state
         final SavedState myState = new SavedState(superState);
         myState.keyId = mKeyId;
-        myState.openPgpProvider = mXmppProvider;
+        myState.xmppProvider = mXmppProvider;
         myState.defaultUserId = mDefaultUserId;
         return myState;
     }
@@ -232,7 +232,7 @@ public class XmppKeyPreference extends Preference {
         SavedState myState = (SavedState) state;
         super.onRestoreInstanceState(myState.getSuperState());
         mKeyId = myState.keyId;
-        mXmppProvider = myState.openPgpProvider;
+        mXmppProvider = myState.xmppProvider;
         mDefaultUserId = myState.defaultUserId;
         notifyChanged();
     }
@@ -245,14 +245,14 @@ public class XmppKeyPreference extends Preference {
      */
     private static class SavedState extends BaseSavedState {
         long keyId;
-        String openPgpProvider;
+        String xmppProvider;
         String defaultUserId;
 
         public SavedState(Parcel source) {
             super(source);
 
             keyId = source.readInt();
-            openPgpProvider = source.readString();
+            xmppProvider = source.readString();
             defaultUserId = source.readString();
         }
 
@@ -261,7 +261,7 @@ public class XmppKeyPreference extends Preference {
             super.writeToParcel(dest, flags);
 
             dest.writeLong(keyId);
-            dest.writeString(openPgpProvider);
+            dest.writeString(xmppProvider);
             dest.writeString(defaultUserId);
         }
 

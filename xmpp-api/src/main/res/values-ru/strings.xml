@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources>
   <string name="xmpp_list_preference_none">Нет</string>
-  <string name="xmpp_install_openkeychain_via">Установить OpenKeychain через %s</string>
-  <string name="xmpp_no_key_selected">Ключ не выбран</string>
-  <string name="xmpp_key_selected">Ключ был выбран</string>
+  <string name="xmpp_install_via">Установить Conversations через %s</string>
+  <string name="xmpp_no_account_selected">Ключ не выбран</string>
+  <string name="xmpp_account_selected">Ключ был выбран</string>
 </resources>

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources>
   <string name="xmpp_list_preference_none">Brez</string>
-  <string name="xmpp_install_openkeychain_via">Namesti OpenKeychain prek %s</string>
-  <string name="xmpp_no_key_selected">Izbran ni noben ključ</string>
-  <string name="xmpp_key_selected">Ključ je bil izbran</string>
+  <string name="xmpp_install_via">Namesti Conversations prek %s</string>
+  <string name="xmpp_no_account_selected">Izbran ni noben ključ</string>
+  <string name="xmpp_account_selected">Ključ je bil izbran</string>
 </resources>

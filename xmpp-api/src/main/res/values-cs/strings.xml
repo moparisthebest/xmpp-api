@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources>
   <string name="xmpp_list_preference_none">Žádný</string>
-  <string name="xmpp_install_openkeychain_via">Instalovat OpenKeychain pomocí %s</string>
+  <string name="xmpp_install_via">Instalovat Conversations pomocí %s</string>
 </resources>

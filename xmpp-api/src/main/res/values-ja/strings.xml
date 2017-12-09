@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources>
   <string name="xmpp_list_preference_none">無し</string>
-  <string name="xmpp_install_openkeychain_via">%s 経由でOpenKeychainをインストール</string>
-  <string name="xmpp_no_key_selected">鍵が選択されていません</string>
-  <string name="xmpp_key_selected">鍵は選択済みです</string>
+  <string name="xmpp_install_via">%s 経由でConversationsをインストール</string>
+  <string name="xmpp_no_account_selected">鍵が選択されていません</string>
+  <string name="xmpp_account_selected">鍵は選択済みです</string>
 </resources>

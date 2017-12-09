@@ -43,19 +43,14 @@ import org.openintents.xmpp.R;
  * http://grepcode.com/file_/repository.grepcode.com/java/ext/com.google.android/android/4.4_r1/android/preference/ListPreference.java/?v=source
  */
 public class XmppAppPreference extends DialogPreference {
-    private static final String OPENKEYCHAIN_PACKAGE = "org.sufficientlysecure.keychain";
+    private static final String CONVERSATIONS_PACKAGE = "eu.siacs.conversations";
     private static final String MARKET_INTENT_URI_BASE = "market://details?id=%s";
     private static final Intent MARKET_INTENT = new Intent(Intent.ACTION_VIEW, Uri.parse(
-            String.format(MARKET_INTENT_URI_BASE, OPENKEYCHAIN_PACKAGE)));
+            String.format(MARKET_INTENT_URI_BASE, CONVERSATIONS_PACKAGE)));
 
-    private static final String PACKAGE_NAME_APG = "org.thialfihar.android.apg";
+    // can blacklist known-broken implementations with this
     private static final ArrayList<String> PROVIDER_BLACKLIST = new ArrayList<>();
     private OnDialogClosedListener onDialogCloseListener;
-
-    static {
-        // Unfortunately, the current released version of APG includes a broken version of the API
-        PROVIDER_BLACKLIST.add(PACKAGE_NAME_APG);
-    }
 
     private ArrayList<XmppProviderEntry> mLegacyList = new ArrayList<>();
     private ArrayList<XmppProviderEntry> mList = new ArrayList<>();
@@ -308,8 +303,8 @@ public class XmppAppPreference extends DialogPreference {
                 String marketName = String.valueOf(resolveInfo.activityInfo.applicationInfo
                         .loadLabel(getContext().getPackageManager()));
                 String simpleName = String.format(getContext().getString(R.string
-                        .xmpp_install_openkeychain_via), marketName);
-                mList.add(new XmppProviderEntry(OPENKEYCHAIN_PACKAGE, simpleName,
+                        .xmpp_install_via), marketName);
+                mList.add(new XmppProviderEntry(CONVERSATIONS_PACKAGE, simpleName,
                         icon, marketIntent));
             }
         }
@@ -344,12 +339,5 @@ public class XmppAppPreference extends DialogPreference {
 
     public interface OnDialogClosedListener {
         void onDialogClosed();
-    }
-
-    public static boolean isApgInstalled(Context context) {
-        Intent intent = new Intent("org.openintents.xmpp.IXmppService");
-        intent.setPackage(PACKAGE_NAME_APG);
-        List<ResolveInfo> resInfo = context.getPackageManager().queryIntentServices(intent, 0);
-        return resInfo != null && !resInfo.isEmpty();
     }
 }

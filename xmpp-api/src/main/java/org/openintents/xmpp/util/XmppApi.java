@@ -145,7 +145,7 @@ public class XmppApi {
      * If XmppSignatureResult.getResult() == XmppSignatureResult.RESULT_KEY_MISSING
      * in addition a PendingIntent is returned via RESULT_INTENT to download missing keys.
      * On all other status, in addition a PendingIntent is returned via RESULT_INTENT to open
-     * the key view in OpenKeychain.
+     * the key view in Conversations.
      * 
      * optional extras:
      * byte[]        EXTRA_DETACHED_SIGNATURE    (detached signature)
