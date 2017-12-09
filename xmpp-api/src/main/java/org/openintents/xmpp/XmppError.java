@@ -31,9 +31,7 @@ public class XmppError implements Parcelable {
     public static final int CLIENT_SIDE_ERROR = -1;
     public static final int GENERIC_ERROR = 0;
     public static final int INCOMPATIBLE_API_VERSIONS = 1;
-    public static final int NO_OR_WRONG_PASSPHRASE = 2;
-    public static final int NO_USER_IDS = 3;
-    public static final int OPPORTUNISTIC_MISSING_KEYS = 4;
+    public static final int NO_ACCOUNT_IDS = 2;
 
 
     int errorId;

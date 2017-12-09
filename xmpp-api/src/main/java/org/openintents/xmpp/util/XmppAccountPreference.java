@@ -33,23 +33,23 @@ import org.openintents.xmpp.IXmppService;
 import org.openintents.xmpp.XmppError;
 import org.openintents.xmpp.R;
 
-public class XmppKeyPreference extends Preference {
-    private long mKeyId;
+public class XmppAccountPreference extends Preference {
+    private long mAccountId;
     private String mXmppProvider;
     private XmppServiceConnection mServiceConnection;
     private String mDefaultUserId;
 
-    public static final int REQUEST_CODE_KEY_PREFERENCE = 9999;
+    public static final int REQUEST_CODE_ACCOUNT_PREFERENCE = 9999;
 
-    private static final int NO_KEY = 0;
+    private static final int NO_ACCOUNT = 0;
 
-    public XmppKeyPreference(Context context, AttributeSet attrs) {
+    public XmppAccountPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
     @Override
     public CharSequence getSummary() {
-        return (mKeyId == NO_KEY) ? getContext().getString(R.string.xmpp_no_account_selected)
+        return (mAccountId == NO_ACCOUNT) ? getContext().getString(R.string.xmpp_no_account_selected)
                 : getContext().getString(R.string.xmpp_account_selected);
     }
 
@@ -80,7 +80,7 @@ public class XmppKeyPreference extends Preference {
                     @Override
                     public void onBound(IXmppService service) {
 
-                        getSignKeyId(new Intent());
+                        getAccountId(new Intent());
                     }
 
                     @Override
@@ -92,12 +92,12 @@ public class XmppKeyPreference extends Preference {
         mServiceConnection.bindToService();
     }
 
-    private void getSignKeyId(Intent data) {
-        data.setAction(XmppApi.ACTION_GET_SIGN_KEY_ID);
+    private void getAccountId(Intent data) {
+        data.setAction(XmppApi.ACTION_GET_ACCOUNT_ID);
         data.putExtra(XmppApi.EXTRA_USER_ID, mDefaultUserId);
 
         XmppApi api = new XmppApi(getContext(), mServiceConnection.getService());
-        api.executeApiAsync(data, null, null, new MyCallback(REQUEST_CODE_KEY_PREFERENCE));
+        api.executeApiAsync(data, null, null, new MyCallback(REQUEST_CODE_ACCOUNT_PREFERENCE));
     }
 
     private class MyCallback implements XmppApi.IXmppCallback {
@@ -112,7 +112,7 @@ public class XmppKeyPreference extends Preference {
             switch (result.getIntExtra(XmppApi.RESULT_CODE, XmppApi.RESULT_CODE_ERROR)) {
                 case XmppApi.RESULT_CODE_SUCCESS: {
 
-                    long keyId = result.getLongExtra(XmppApi.EXTRA_SIGN_KEY_ID, NO_KEY);
+                    long keyId = result.getLongExtra(XmppApi.EXTRA_SIGN_KEY_ID, NO_ACCOUNT);
                     save(keyId);
 
                     break;
@@ -154,23 +154,23 @@ public class XmppKeyPreference extends Preference {
     /**
      * Public API
      */
-    public void setValue(long keyId) {
-        setAndPersist(keyId);
+    public void setValue(long accountId) {
+        setAndPersist(accountId);
     }
 
     /**
      * Public API
      */
     public long getValue() {
-        return mKeyId;
+        return mAccountId;
     }
 
     private void setAndPersist(long newValue) {
-        mKeyId = newValue;
+        mAccountId = newValue;
 
         // Save to persistent storage (this method will make sure this
         // preference should be persistent, along with other useful checks)
-        persistLong(mKeyId);
+        persistLong(mAccountId);
 
         // Data has changed, notify so UI can be refreshed!
         notifyChanged();
@@ -183,14 +183,14 @@ public class XmppKeyPreference extends Preference {
     protected Object onGetDefaultValue(TypedArray a, int index) {
         // This preference type's value type is Long, so we read the default
         // value from the attributes as an Integer.
-        return (long) a.getInteger(index, NO_KEY);
+        return (long) a.getInteger(index, NO_ACCOUNT);
     }
 
     @Override
     protected void onSetInitialValue(boolean restoreValue, Object defaultValue) {
         if (restoreValue) {
             // Restore state
-            mKeyId = getPersistedLong(mKeyId);
+            mAccountId = getPersistedLong(mAccountId);
         } else {
             // Set state
             long value = (Long) defaultValue;
@@ -214,7 +214,7 @@ public class XmppKeyPreference extends Preference {
 
         // Save the instance state
         final SavedState myState = new SavedState(superState);
-        myState.keyId = mKeyId;
+        myState.accountId = mAccountId;
         myState.xmppProvider = mXmppProvider;
         myState.defaultUserId = mDefaultUserId;
         return myState;
@@ -231,7 +231,7 @@ public class XmppKeyPreference extends Preference {
         // Restore the instance state
         SavedState myState = (SavedState) state;
         super.onRestoreInstanceState(myState.getSuperState());
-        mKeyId = myState.keyId;
+        mAccountId = myState.accountId;
         mXmppProvider = myState.xmppProvider;
         mDefaultUserId = myState.defaultUserId;
         notifyChanged();
@@ -244,14 +244,14 @@ public class XmppKeyPreference extends Preference {
      * It is important to always call through to super methods.
      */
     private static class SavedState extends BaseSavedState {
-        long keyId;
+        long accountId;
         String xmppProvider;
         String defaultUserId;
 
         public SavedState(Parcel source) {
             super(source);
 
-            keyId = source.readInt();
+            accountId = source.readInt();
             xmppProvider = source.readString();
             defaultUserId = source.readString();
         }
@@ -260,7 +260,7 @@ public class XmppKeyPreference extends Preference {
         public void writeToParcel(Parcel dest, int flags) {
             super.writeToParcel(dest, flags);
 
-            dest.writeLong(keyId);
+            dest.writeLong(accountId);
             dest.writeString(xmppProvider);
             dest.writeString(defaultUserId);
         }
@@ -282,8 +282,8 @@ public class XmppKeyPreference extends Preference {
     }
 
     public boolean handleOnActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_CODE_KEY_PREFERENCE && resultCode == Activity.RESULT_OK) {
-            getSignKeyId(data);
+        if (requestCode == REQUEST_CODE_ACCOUNT_PREFERENCE && resultCode == Activity.RESULT_OK) {
+            getAccountId(data);
             return true;
         } else {
             return false;

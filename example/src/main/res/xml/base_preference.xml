@@ -5,7 +5,7 @@
         <org.openintents.xmpp.util.XmppAppPreference
             android:key="xmpp_provider_list"
             android:title="Select XMPP app!" />
-        <org.openintents.xmpp.util.XmppKeyPreference
+        <org.openintents.xmpp.util.XmppAccountPreference
             android:key="xmpp_key"
             android:title="Select key!" />
         <Preference

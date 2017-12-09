@@ -23,10 +23,10 @@ import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 
 import org.openintents.xmpp.util.XmppAppPreference;
-import org.openintents.xmpp.util.XmppKeyPreference;
+import org.openintents.xmpp.util.XmppAccountPreference;
 
 public class BaseActivity extends PreferenceActivity {
-    XmppKeyPreference mKey;
+    XmppAccountPreference mKey;
     XmppAppPreference mProvider;
 
     @Override
@@ -39,7 +39,7 @@ public class BaseActivity extends PreferenceActivity {
         // find preferences
         Preference xmppApi = findPreference("xmpp_provider_demo");
         mProvider = (XmppAppPreference) findPreference("xmpp_provider_list");
-        mKey = (XmppKeyPreference) findPreference("xmpp_key");
+        mKey = (XmppAccountPreference) findPreference("xmpp_key");
 
         xmppApi.setOnPreferenceClickListener(new OnPreferenceClickListener() {
             @Override

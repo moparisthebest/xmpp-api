@@ -178,7 +178,7 @@ public class XmppApi {
      * returned extras:
      * long        EXTRA_SIGN_KEY_ID
      */
-    public static final String ACTION_GET_SIGN_KEY_ID = "org.openintents.xmpp.action.GET_SIGN_KEY_ID";
+    public static final String ACTION_GET_ACCOUNT_ID = "org.openintents.xmpp.action.GET_ACCOUNT_ID";
 
     /**
      * Get key ids based on given user ids (=emails)

@@ -25,7 +25,7 @@ public class XmppMetadata implements Parcelable {
      * old versions of the protocol (and thus old versions of this class), we need a versioning
      * system for the parcels sent between the clients and the providers.
      */
-    public static final int PARCELABLE_VERSION = 2;
+    public static final int PARCELABLE_VERSION = 1;
 
     String filename;
     String mimeType;
@@ -111,18 +111,16 @@ public class XmppMetadata implements Parcelable {
 
     public static final Creator<XmppMetadata> CREATOR = new Creator<XmppMetadata>() {
         public XmppMetadata createFromParcel(final Parcel source) {
-            int version = source.readInt(); // parcelableVersion
-            int parcelableSize = source.readInt();
-            int startPosition = source.dataPosition();
+            final int version = source.readInt(); // parcelableVersion
+            final int parcelableSize = source.readInt();
+            final int startPosition = source.dataPosition();
 
             XmppMetadata vr = new XmppMetadata();
             vr.filename = source.readString();
             vr.mimeType = source.readString();
             vr.modificationTime = source.readLong();
             vr.originalSize = source.readLong();
-            if (version >= 2) {
-                vr.charset = source.readString();
-            }
+            vr.charset = source.readString();
 
             // skip over all fields added in future versions of this parcel
             source.setDataPosition(startPosition + parcelableSize);

@@ -31,9 +31,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import org.openintents.xmpp.IXmppService;
-import org.openintents.xmpp.XmppDecryptionResult;
 import org.openintents.xmpp.XmppError;
-import org.openintents.xmpp.XmppSignatureResult;
 import org.openintents.xmpp.util.XmppApi;
 import org.openintents.xmpp.util.XmppServiceConnection;
 import org.openintents.xmpp.util.XmppUtils;
@@ -251,35 +249,12 @@ public class XmppApiActivity extends Activity {
                     }
 
                     switch (requestCode) {
-                        case REQUEST_CODE_DECRYPT_AND_VERIFY:
-                        case REQUEST_CODE_DECRYPT_AND_VERIFY_DETACHED: {
-                            // RESULT_SIGNATURE and RESULT_DECRYPTION are never null!
-
-                            XmppSignatureResult signatureResult
-                                    = result.getParcelableExtra(XmppApi.RESULT_SIGNATURE);
-                            showToast(signatureResult.toString());
-                            XmppDecryptionResult decryptionResult
-                                    = result.getParcelableExtra(XmppApi.RESULT_DECRYPTION);
-                            showToast(decryptionResult.toString());
-
-                            break;
-                        }
                         case REQUEST_CODE_DETACHED_SIGN: {
                             byte[] detachedSig
                                     = result.getByteArrayExtra(XmppApi.RESULT_DETACHED_SIGNATURE);
                             Log.d(XmppApi.TAG, "RESULT_DETACHED_SIGNATURE: " + detachedSig.length
                                     + " str=" + new String(detachedSig));
                             mDetachedSignature.setText(new String(detachedSig));
-
-                            break;
-                        }
-                        case REQUEST_CODE_GET_KEY_IDS: {
-                            long[] keyIds = result.getLongArrayExtra(XmppApi.RESULT_KEY_IDS);
-                            String out = "keyIds: ";
-                            for (long keyId : keyIds) {
-                                out += XmppUtils.convertKeyIdToHex(keyId) + ", ";
-                            }
-                            showToast(out);
 
                             break;
                         }
