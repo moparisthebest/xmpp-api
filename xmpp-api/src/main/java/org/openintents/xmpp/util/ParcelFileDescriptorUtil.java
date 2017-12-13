@@ -70,7 +70,7 @@ public class ParcelFileDescriptorUtil {
                     mOut.write(buf, 0, len);
                 }
             } catch (IOException e) {
-                Log.e(XmppApi.TAG, "IOException when writing to out", e);
+                Log.e(XmppServiceApi.TAG, "IOException when writing to out", e);
             } finally {
                 try {
                     mIn.close();

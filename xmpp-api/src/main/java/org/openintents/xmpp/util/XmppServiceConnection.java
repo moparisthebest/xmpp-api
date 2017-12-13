@@ -28,14 +28,14 @@ public class XmppServiceConnection {
 
     // callback interface
     public interface OnBound {
-        public void onBound(IXmppService service);
+        public void onBound(XmppServiceApi serviceApi);
 
         public void onError(Exception e);
     }
 
-    private Context mApplicationContext;
+    private Context context;
 
-    private IXmppService mService;
+    private XmppServiceApi serviceApi;
     private String mProviderPackageName;
 
     private OnBound mOnBoundListener;
@@ -45,10 +45,10 @@ public class XmppServiceConnection {
      *
      * @param context
      * @param providerPackageName specify package name of XMPP provider,
-     *                            e.g., "org.sufficientlysecure.keychain"
+     *                            e.g., "eu.siacs.conversations"
      */
     public XmppServiceConnection(Context context, String providerPackageName) {
-        this.mApplicationContext = context.getApplicationContext();
+        this.context = context;
         this.mProviderPackageName = providerPackageName;
     }
 
@@ -57,7 +57,7 @@ public class XmppServiceConnection {
      *
      * @param context
      * @param providerPackageName specify package name of XMPP provider,
-     *                            e.g., "org.sufficientlysecure.keychain"
+     *                            e.g., "eu.siacs.conversations"
      * @param onBoundListener     callback, executed when connection to service has been established
      */
     public XmppServiceConnection(Context context, String providerPackageName,
@@ -66,24 +66,24 @@ public class XmppServiceConnection {
         this.mOnBoundListener = onBoundListener;
     }
 
-    public IXmppService getService() {
-        return mService;
+    public XmppServiceApi getApi() {
+        return serviceApi;
     }
 
     public boolean isBound() {
-        return (mService != null);
+        return (serviceApi != null);
     }
 
-    private ServiceConnection mServiceConnection = new ServiceConnection() {
+    private ServiceConnection serviceConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName name, IBinder service) {
-            mService = IXmppService.Stub.asInterface(service);
+            serviceApi = new XmppServiceApi(context, IXmppService.Stub.asInterface(service));
             if (mOnBoundListener != null) {
-                mOnBoundListener.onBound(mService);
+                mOnBoundListener.onBound(serviceApi);
             }
         }
 
         public void onServiceDisconnected(ComponentName name) {
-            mService = null;
+            serviceApi = null;
         }
     };
 
@@ -94,12 +94,12 @@ public class XmppServiceConnection {
      */
     public void bindToService() {
         // if not already bound...
-        if (mService == null) {
+        if (serviceApi == null) {
             try {
-                Intent serviceIntent = new Intent(XmppApi.SERVICE_INTENT);
+                Intent serviceIntent = new Intent(XmppServiceApi.SERVICE_INTENT);
                 // NOTE: setPackage is very important to restrict the intent to this provider only!
                 serviceIntent.setPackage(mProviderPackageName);
-                boolean connect = mApplicationContext.bindService(serviceIntent, mServiceConnection,
+                boolean connect = context.getApplicationContext().bindService(serviceIntent, serviceConnection,
                         Context.BIND_AUTO_CREATE);
                 if (!connect) {
                     throw new Exception("bindService() returned false!");
@@ -112,13 +112,13 @@ public class XmppServiceConnection {
         } else {
             // already bound, but also inform client about it with callback
             if (mOnBoundListener != null) {
-                mOnBoundListener.onBound(mService);
+                mOnBoundListener.onBound(serviceApi);
             }
         }
     }
 
     public void unbindFromService() {
-        mApplicationContext.unbindService(mServiceConnection);
+        context.getApplicationContext().unbindService(serviceConnection);
     }
 
 }

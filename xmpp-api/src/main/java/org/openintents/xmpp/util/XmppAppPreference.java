@@ -271,7 +271,7 @@ public class XmppAppPreference extends DialogPreference {
         mList.addAll(mLegacyList);
 
         // search for XMPP providers...
-        Intent intent = new Intent(XmppApi.SERVICE_INTENT);
+        Intent intent = new Intent(XmppServiceApi.SERVICE_INTENT);
         List<ResolveInfo> resInfo = getContext().getPackageManager().queryIntentServices(intent, 0);
         boolean hasNonBlacklistedChoices = false;
         if (resInfo != null) {

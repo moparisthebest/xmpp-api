@@ -25,7 +25,7 @@ import android.content.pm.ResolveInfo;
 public class XmppUtils {
 
     public static boolean isAvailable(Context context) {
-        Intent intent = new Intent(XmppApi.SERVICE_INTENT);
+        Intent intent = new Intent(XmppServiceApi.SERVICE_INTENT);
         List<ResolveInfo> resInfo = context.getPackageManager().queryIntentServices(intent, 0);
         return !resInfo.isEmpty();
     }

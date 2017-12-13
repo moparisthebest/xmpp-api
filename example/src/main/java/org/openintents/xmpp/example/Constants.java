@@ -17,5 +17,5 @@
 package org.openintents.xmpp.example;
 
 public final class Constants {
-    public static final String TAG = "Keychain";
+    public static final String TAG = "xmpp-api";
 }

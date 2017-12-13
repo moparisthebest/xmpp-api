@@ -16,6 +16,8 @@
  
 package org.openintents.xmpp;
 
+import org.openintents.xmpp.IXmppPluginCallback;
+
 interface IXmppService {
 
     /**
@@ -27,4 +29,9 @@ interface IXmppService {
      * see org.openintents.xmpp.util.XmppApi for documentation
      */
     Intent execute(in Intent data, in ParcelFileDescriptor input, int pipeId);
+
+    /**
+     * see org.openintents.xmpp.util.XmppApi for documentation
+     */
+    Intent callback(in Intent data, in IXmppPluginCallback callback);
 }

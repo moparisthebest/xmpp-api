@@ -29,19 +29,16 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 
-import org.openintents.xmpp.IXmppService;
 import org.openintents.xmpp.XmppError;
 import org.openintents.xmpp.R;
 
 public class XmppAccountPreference extends Preference {
-    private long mAccountId;
-    private String mXmppProvider;
-    private XmppServiceConnection mServiceConnection;
-    private String mDefaultUserId;
+    private String accountJid;
+    private String xmppProvider;
+    private XmppServiceConnection serviceConnection;
+    private String preferredJid;
 
     public static final int REQUEST_CODE_ACCOUNT_PREFERENCE = 9999;
-
-    private static final int NO_ACCOUNT = 0;
 
     public XmppAccountPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -49,12 +46,12 @@ public class XmppAccountPreference extends Preference {
 
     @Override
     public CharSequence getSummary() {
-        return (mAccountId == NO_ACCOUNT) ? getContext().getString(R.string.xmpp_no_account_selected)
+        return (accountJid == null) ? getContext().getString(R.string.xmpp_no_account_selected)
                 : getContext().getString(R.string.xmpp_account_selected);
     }
 
     private void updateEnabled() {
-        if (TextUtils.isEmpty(mXmppProvider)) {
+        if (TextUtils.isEmpty(xmppProvider)) {
             setEnabled(false);
         } else {
             setEnabled(true);
@@ -62,45 +59,44 @@ public class XmppAccountPreference extends Preference {
     }
 
     public void setXmppProvider(String packageName) {
-        mXmppProvider = packageName;
+        xmppProvider = packageName;
         updateEnabled();
     }
 
     public void setDefaultUserId(String userId) {
-        mDefaultUserId = userId;
+        preferredJid = userId;
     }
 
     @Override
     protected void onClick() {
         // bind to service
-        mServiceConnection = new XmppServiceConnection(
+        serviceConnection = new XmppServiceConnection(
                 getContext().getApplicationContext(),
-                mXmppProvider,
+                xmppProvider,
                 new XmppServiceConnection.OnBound() {
                     @Override
-                    public void onBound(IXmppService service) {
+                    public void onBound(XmppServiceApi serviceApi) {
 
                         getAccountId(new Intent());
                     }
 
                     @Override
                     public void onError(Exception e) {
-                        Log.e(XmppApi.TAG, "exception on binding!", e);
+                        Log.e(XmppServiceApi.TAG, "exception on binding!", e);
                     }
                 }
         );
-        mServiceConnection.bindToService();
+        serviceConnection.bindToService();
     }
 
     private void getAccountId(Intent data) {
-        data.setAction(XmppApi.ACTION_GET_ACCOUNT_ID);
-        data.putExtra(XmppApi.EXTRA_USER_ID, mDefaultUserId);
+        data.setAction(XmppServiceApi.ACTION_GET_ACCOUNT_JID);
+        data.putExtra(XmppServiceApi.EXTRA_ACCOUNT_JID, preferredJid);
 
-        XmppApi api = new XmppApi(getContext(), mServiceConnection.getService());
-        api.executeApiAsync(data, null, null, new MyCallback(REQUEST_CODE_ACCOUNT_PREFERENCE));
+        serviceConnection.getApi().executeApiAsync(data, null, null, new MyCallback(REQUEST_CODE_ACCOUNT_PREFERENCE));
     }
 
-    private class MyCallback implements XmppApi.IXmppCallback {
+    private class MyCallback implements XmppServiceApi.IXmppCallback {
         int requestCode;
 
         private MyCallback(int requestCode) {
@@ -109,30 +105,29 @@ public class XmppAccountPreference extends Preference {
 
         @Override
         public void onReturn(Intent result) {
-            switch (result.getIntExtra(XmppApi.RESULT_CODE, XmppApi.RESULT_CODE_ERROR)) {
-                case XmppApi.RESULT_CODE_SUCCESS: {
+            switch (result.getIntExtra(XmppServiceApi.RESULT_CODE, XmppServiceApi.RESULT_CODE_ERROR)) {
+                case XmppServiceApi.RESULT_CODE_SUCCESS: {
 
-                    long keyId = result.getLongExtra(XmppApi.EXTRA_SIGN_KEY_ID, NO_ACCOUNT);
-                    save(keyId);
+                    save(result.getStringExtra(XmppServiceApi.EXTRA_ACCOUNT_JID));
 
                     break;
                 }
-                case XmppApi.RESULT_CODE_USER_INTERACTION_REQUIRED: {
+                case XmppServiceApi.RESULT_CODE_USER_INTERACTION_REQUIRED: {
 
-                    PendingIntent pi = result.getParcelableExtra(XmppApi.RESULT_INTENT);
+                    PendingIntent pi = result.getParcelableExtra(XmppServiceApi.RESULT_INTENT);
                     try {
                         Activity act = (Activity) getContext();
                         act.startIntentSenderFromChild(
                                 act, pi.getIntentSender(),
                                 requestCode, null, 0, 0, 0);
                     } catch (IntentSender.SendIntentException e) {
-                        Log.e(XmppApi.TAG, "SendIntentException", e);
+                        Log.e(XmppServiceApi.TAG, "SendIntentException", e);
                     }
                     break;
                 }
-                case XmppApi.RESULT_CODE_ERROR: {
-                    XmppError error = result.getParcelableExtra(XmppApi.RESULT_ERROR);
-                    Log.e(XmppApi.TAG, "RESULT_CODE_ERROR: " + error.getMessage());
+                case XmppServiceApi.RESULT_CODE_ERROR: {
+                    XmppError error = result.getParcelableExtra(XmppServiceApi.RESULT_ERROR);
+                    Log.e(XmppServiceApi.TAG, "RESULT_CODE_ERROR: " + error.getMessage());
 
                     break;
                 }
@@ -140,7 +135,7 @@ public class XmppAccountPreference extends Preference {
         }
     }
 
-    private void save(long newValue) {
+    private void save(String newValue) {
         // Give the client a chance to ignore this change if they deem it
         // invalid
         if (!callChangeListener(newValue)) {
@@ -154,23 +149,23 @@ public class XmppAccountPreference extends Preference {
     /**
      * Public API
      */
-    public void setValue(long accountId) {
-        setAndPersist(accountId);
+    public void setValue(String accountJid) {
+        setAndPersist(accountJid);
     }
 
     /**
      * Public API
      */
-    public long getValue() {
-        return mAccountId;
+    public String getValue() {
+        return accountJid;
     }
 
-    private void setAndPersist(long newValue) {
-        mAccountId = newValue;
+    private void setAndPersist(String newValue) {
+        accountJid = newValue;
 
         // Save to persistent storage (this method will make sure this
         // preference should be persistent, along with other useful checks)
-        persistLong(mAccountId);
+        persistString(accountJid);
 
         // Data has changed, notify so UI can be refreshed!
         notifyChanged();
@@ -181,20 +176,17 @@ public class XmppAccountPreference extends Preference {
 
     @Override
     protected Object onGetDefaultValue(TypedArray a, int index) {
-        // This preference type's value type is Long, so we read the default
-        // value from the attributes as an Integer.
-        return (long) a.getInteger(index, NO_ACCOUNT);
+        return a.getString(index);
     }
 
     @Override
     protected void onSetInitialValue(boolean restoreValue, Object defaultValue) {
         if (restoreValue) {
             // Restore state
-            mAccountId = getPersistedLong(mAccountId);
+            accountJid = getPersistedString(accountJid);
         } else {
             // Set state
-            long value = (Long) defaultValue;
-            setAndPersist(value);
+            setAndPersist((String) defaultValue);
         }
     }
 
@@ -214,9 +206,9 @@ public class XmppAccountPreference extends Preference {
 
         // Save the instance state
         final SavedState myState = new SavedState(superState);
-        myState.accountId = mAccountId;
-        myState.xmppProvider = mXmppProvider;
-        myState.defaultUserId = mDefaultUserId;
+        myState.accountJid = accountJid;
+        myState.xmppProvider = xmppProvider;
+        myState.preferredJid = preferredJid;
         return myState;
     }
 
@@ -231,9 +223,9 @@ public class XmppAccountPreference extends Preference {
         // Restore the instance state
         SavedState myState = (SavedState) state;
         super.onRestoreInstanceState(myState.getSuperState());
-        mAccountId = myState.accountId;
-        mXmppProvider = myState.xmppProvider;
-        mDefaultUserId = myState.defaultUserId;
+        accountJid = myState.accountJid;
+        xmppProvider = myState.xmppProvider;
+        preferredJid = myState.preferredJid;
         notifyChanged();
     }
 
@@ -244,25 +236,25 @@ public class XmppAccountPreference extends Preference {
      * It is important to always call through to super methods.
      */
     private static class SavedState extends BaseSavedState {
-        long accountId;
+        String accountJid;
         String xmppProvider;
-        String defaultUserId;
+        String preferredJid;
 
         public SavedState(Parcel source) {
             super(source);
 
-            accountId = source.readInt();
+            accountJid = source.readString();
             xmppProvider = source.readString();
-            defaultUserId = source.readString();
+            preferredJid = source.readString();
         }
 
         @Override
         public void writeToParcel(Parcel dest, int flags) {
             super.writeToParcel(dest, flags);
 
-            dest.writeLong(accountId);
+            dest.writeString(accountJid);
             dest.writeString(xmppProvider);
-            dest.writeString(defaultUserId);
+            dest.writeString(preferredJid);
         }
 
         public SavedState(Parcelable superState) {

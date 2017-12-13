@@ -30,142 +30,88 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import org.openintents.xmpp.IXmppService;
 import org.openintents.xmpp.XmppError;
-import org.openintents.xmpp.util.XmppApi;
+import org.openintents.xmpp.AbstractXmppPluginCallback;
+import org.openintents.xmpp.util.XmppPluginCallbackApi;
+import org.openintents.xmpp.util.XmppServiceApi;
 import org.openintents.xmpp.util.XmppServiceConnection;
-import org.openintents.xmpp.util.XmppUtils;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
+import java.util.Date;
+import java.util.Locale;
 
 public class XmppApiActivity extends Activity {
-    private EditText mMessage;
-    private EditText mCiphertext;
-    private EditText mDetachedSignature;
-    private EditText mEncryptUserIds;
-    private EditText mGetKeyEdit;
-    private EditText mGetKeyIdsEdit;
+    private EditText message;
+    private EditText messageCallbackPattern;
 
-    private XmppServiceConnection mServiceConnection;
+    private XmppServiceConnection serviceConnection;
 
-    private long mSignKeyId;
+    private String accountJid;
 
-    public static final int REQUEST_CODE_CLEARTEXT_SIGN = 9910;
-    public static final int REQUEST_CODE_ENCRYPT = 9911;
-    public static final int REQUEST_CODE_SIGN_AND_ENCRYPT = 9912;
-    public static final int REQUEST_CODE_DECRYPT_AND_VERIFY = 9913;
-    public static final int REQUEST_CODE_GET_KEY = 9914;
-    public static final int REQUEST_CODE_GET_KEY_IDS = 9915;
-    public static final int REQUEST_CODE_DETACHED_SIGN = 9916;
-    public static final int REQUEST_CODE_DECRYPT_AND_VERIFY_DETACHED = 9917;
-    public static final int REQUEST_CODE_BACKUP = 9918;
+    public static final int REQUEST_CODE_SEND_MESSAGE = 9910;
+    public static final int REQUEST_CODE_REGISTER_CALLBACK = 9915;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.xmpp_provider);
 
-        mMessage = (EditText) findViewById(R.id.crypto_provider_demo_message);
-        mCiphertext = (EditText) findViewById(R.id.crypto_provider_demo_ciphertext);
-        mDetachedSignature = (EditText) findViewById(R.id.crypto_provider_demo_detached_signature);
-        mEncryptUserIds = (EditText) findViewById(R.id.crypto_provider_demo_encrypt_user_id);
-        Button cleartextSign = (Button) findViewById(R.id.crypto_provider_demo_cleartext_sign);
-        Button detachedSign = (Button) findViewById(R.id.crypto_provider_demo_detached_sign);
-        Button encrypt = (Button) findViewById(R.id.crypto_provider_demo_encrypt);
-        Button signAndEncrypt = (Button) findViewById(R.id.crypto_provider_demo_sign_and_encrypt);
-        Button decryptAndVerify = (Button) findViewById(R.id.crypto_provider_demo_decrypt_and_verify);
-        Button verifyDetachedSignature = (Button) findViewById(R.id.crypto_provider_demo_verify_detached_signature);
-        mGetKeyEdit = (EditText) findViewById(R.id.crypto_provider_demo_get_key_edit);
-        mGetKeyIdsEdit = (EditText) findViewById(R.id.crypto_provider_demo_get_key_ids_edit);
-        Button getKey = (Button) findViewById(R.id.crypto_provider_demo_get_key);
-        Button getKeyIds = (Button) findViewById(R.id.crypto_provider_demo_get_key_ids);
-        Button backup = (Button) findViewById(R.id.crypto_provider_demo_backup);
+        message = (EditText) findViewById(R.id.message);
+        Button sendMessage = (Button) findViewById(R.id.send_message);
+        messageCallbackPattern = (EditText) findViewById(R.id.message_callback_pattern);
+        Button registerMessageCallback = (Button) findViewById(R.id.register_message_callback);
 
-        cleartextSign.setOnClickListener(new View.OnClickListener() {
+        sendMessage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cleartextSign(new Intent());
+                sendMessage(new Intent());
             }
         });
-        detachedSign.setOnClickListener(new View.OnClickListener() {
+        registerMessageCallback.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                detachedSign(new Intent());
-            }
-        });
-        encrypt.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                encrypt(new Intent());
-            }
-        });
-        signAndEncrypt.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                signAndEncrypt(new Intent());
-            }
-        });
-        decryptAndVerify.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                decryptAndVerify(new Intent());
-            }
-        });
-        verifyDetachedSignature.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                decryptAndVerifyDetached(new Intent());
-            }
-        });
-        getKey.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getKey(new Intent());
-            }
-        });
-        getKeyIds.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getKeyIds(new Intent());
-            }
-        });
-        backup.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                backup(new Intent());
+                registerMessageCallback(new Intent());
             }
         });
 
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
         String providerPackageName = settings.getString("xmpp_provider_list", "");
-        mSignKeyId = settings.getLong("xmpp_key", 0);
+        accountJid = settings.getString("xmpp_key", "");
         if (TextUtils.isEmpty(providerPackageName)) {
             Toast.makeText(this, "No XMPP app selected!", Toast.LENGTH_LONG).show();
             finish();
-        } else if (mSignKeyId == 0) {
-            Toast.makeText(this, "No key selected!", Toast.LENGTH_LONG).show();
+        } else if (TextUtils.isEmpty(accountJid)) {
+            Toast.makeText(this, "No account selected!", Toast.LENGTH_LONG).show();
             finish();
         } else {
+
+            // set interesting default text
+            message.setText("<message xmlns=\"jabber:client\" to=\"test@echo.burtrum.org\" type=\"normal\" id=\"9316996e-88da-4d6b-9bb6-6ff19c096a2c\" from=\""+accountJid+"\">\n" +
+                    "  <echo xmlns=\"https://code.moparisthebest.com/moparisthebest/xmpp-echo-self\"/>\n" +
+                    "    <forwarded xmlns=\"urn:xmpp:forward:0\">\n" +
+                    "        <message xmlns=\"jabber:client\" from=\"test@echo.burtrum.org\" type=\"chat\" id=\"9316996e-88da-4d6b-9bb6-6ff19c096a2b\" to=\""+accountJid+"\">\n" +
+                    "            <body>Now is "+new Date()+"</body>\n" +
+                    "        </message>\n" +
+                    "    </forwarded>\n" +
+                    "</message>");
+
             // bind to service
-            mServiceConnection = new XmppServiceConnection(
+            serviceConnection = new XmppServiceConnection(
                     XmppApiActivity.this.getApplicationContext(),
                     providerPackageName,
                     new XmppServiceConnection.OnBound() {
                         @Override
-                        public void onBound(IXmppService service) {
-                            Log.d(XmppApi.TAG, "onBound!");
+                        public void onBound(XmppServiceApi serviceApi) {
+                            Log.d(XmppServiceApi.TAG, "onBound!");
                         }
 
                         @Override
                         public void onError(Exception e) {
-                            Log.e(XmppApi.TAG, "exception when binding!", e);
+                            Log.e(XmppServiceApi.TAG, "exception when binding!", e);
                         }
                     }
             );
-            mServiceConnection.bindToService();
+            serviceConnection.bindToService();
         }
     }
 
@@ -195,27 +141,7 @@ public class XmppApiActivity extends Activity {
         });
     }
 
-    /**
-     * Takes input from message or ciphertext EditText and turns it into a ByteArrayInputStream
-     */
-    private InputStream getInputstream(boolean ciphertext) {
-        InputStream is = null;
-        try {
-            String inputStr;
-            if (ciphertext) {
-                inputStr = mCiphertext.getText().toString();
-            } else {
-                inputStr = mMessage.getText().toString();
-            }
-            is = new ByteArrayInputStream(inputStr.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            Log.e(Constants.TAG, "UnsupportedEncodingException", e);
-        }
-
-        return is;
-    }
-
-    private class MyCallback implements XmppApi.IXmppCallback {
+    private class MyCallback implements XmppServiceApi.IXmppCallback {
         boolean returnToCiphertextField;
         ByteArrayOutputStream os;
         int requestCode;
@@ -228,47 +154,15 @@ public class XmppApiActivity extends Activity {
 
         @Override
         public void onReturn(Intent result) {
-            switch (result.getIntExtra(XmppApi.RESULT_CODE, XmppApi.RESULT_CODE_ERROR)) {
-                case XmppApi.RESULT_CODE_SUCCESS: {
+            switch (result.getIntExtra(XmppServiceApi.RESULT_CODE, XmppServiceApi.RESULT_CODE_ERROR)) {
+                case XmppServiceApi.RESULT_CODE_SUCCESS: {
                     showToast("RESULT_CODE_SUCCESS");
-
-                    // encrypt/decrypt/sign/verify
-                    if (os != null) {
-                        try {
-                            Log.d(XmppApi.TAG, "result: " + os.toByteArray().length
-                                    + " str=" + os.toString("UTF-8"));
-
-                            if (returnToCiphertextField) {
-                                mCiphertext.setText(os.toString("UTF-8"));
-                            } else {
-                                mMessage.setText(os.toString("UTF-8"));
-                            }
-                        } catch (UnsupportedEncodingException e) {
-                            Log.e(Constants.TAG, "UnsupportedEncodingException", e);
-                        }
-                    }
-
-                    switch (requestCode) {
-                        case REQUEST_CODE_DETACHED_SIGN: {
-                            byte[] detachedSig
-                                    = result.getByteArrayExtra(XmppApi.RESULT_DETACHED_SIGNATURE);
-                            Log.d(XmppApi.TAG, "RESULT_DETACHED_SIGNATURE: " + detachedSig.length
-                                    + " str=" + new String(detachedSig));
-                            mDetachedSignature.setText(new String(detachedSig));
-
-                            break;
-                        }
-                        default: {
-
-                        }
-                    }
-
                     break;
                 }
-                case XmppApi.RESULT_CODE_USER_INTERACTION_REQUIRED: {
+                case XmppServiceApi.RESULT_CODE_USER_INTERACTION_REQUIRED: {
                     showToast("RESULT_CODE_USER_INTERACTION_REQUIRED");
 
-                    PendingIntent pi = result.getParcelableExtra(XmppApi.RESULT_INTENT);
+                    PendingIntent pi = result.getParcelableExtra(XmppServiceApi.RESULT_INTENT);
                     try {
                         XmppApiActivity.this.startIntentSenderFromChild(
                                 XmppApiActivity.this, pi.getIntentSender(),
@@ -278,10 +172,10 @@ public class XmppApiActivity extends Activity {
                     }
                     break;
                 }
-                case XmppApi.RESULT_CODE_ERROR: {
+                case XmppServiceApi.RESULT_CODE_ERROR: {
                     showToast("RESULT_CODE_ERROR");
 
-                    XmppError error = result.getParcelableExtra(XmppApi.RESULT_ERROR);
+                    XmppError error = result.getParcelableExtra(XmppServiceApi.RESULT_ERROR);
                     handleError(error);
                     break;
                 }
@@ -289,111 +183,48 @@ public class XmppApiActivity extends Activity {
         }
     }
 
-    public void cleartextSign(Intent data) {
-        data.setAction(XmppApi.ACTION_CLEARTEXT_SIGN);
-        data.putExtra(XmppApi.EXTRA_SIGN_KEY_ID, mSignKeyId);
-
-        InputStream is = getInputstream(false);
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-
-        XmppApi api = new XmppApi(this, mServiceConnection.getService());
-        api.executeApiAsync(data, is, os, new MyCallback(true, os, REQUEST_CODE_CLEARTEXT_SIGN));
-    }
-
-    public void detachedSign(Intent data) {
-        data.setAction(XmppApi.ACTION_DETACHED_SIGN);
-        data.putExtra(XmppApi.EXTRA_SIGN_KEY_ID, mSignKeyId);
-
-        InputStream is = getInputstream(false);
-        // no output stream needed, detached signature is returned as RESULT_DETACHED_SIGNATURE
-
-        XmppApi api = new XmppApi(this, mServiceConnection.getService());
-        api.executeApiAsync(data, is, null, new MyCallback(true, null, REQUEST_CODE_DETACHED_SIGN));
-    }
-
-    public void encrypt(Intent data) {
-        data.setAction(XmppApi.ACTION_ENCRYPT);
-        if (!TextUtils.isEmpty(mEncryptUserIds.getText().toString())) {
-            data.putExtra(XmppApi.EXTRA_USER_IDS, mEncryptUserIds.getText().toString().split(","));
+    private AbstractXmppPluginCallback pluginCallback = new AbstractXmppPluginCallback() {
+        /**
+         * This is called by the remote service regularly to tell us about
+         * new values.  Note that IPC calls are dispatched through a thread
+         * pool running in each process, so the code executing here will
+         * NOT be running in our main thread like most other things -- so,
+         * to update the UI, we need to use a Handler to hop over there.
+         */
+        @Override
+        public Intent execute(final Intent data, final InputStream inputStream, final OutputStream outputStream) {
+            if(XmppPluginCallbackApi.ACTION_NEW_MESSAGE.equals(data.getAction())) {
+                showToast(String.format(Locale.US, "status: %d, from: '%s', to: '%s', body: '%s'",
+                        data.getIntExtra(XmppPluginCallbackApi.EXTRA_MESSAGE_STATUS, -1),
+                        data.getStringExtra(XmppPluginCallbackApi.EXTRA_MESSAGE_FROM),
+                        data.getStringExtra(XmppPluginCallbackApi.EXTRA_MESSAGE_TO),
+                        data.getStringExtra(XmppPluginCallbackApi.EXTRA_MESSAGE_BODY)));
+                final Intent result = new Intent();
+                result.putExtra(XmppPluginCallbackApi.RESULT_CODE, XmppPluginCallbackApi.RESULT_CODE_SUCCESS);
+                return result;
+            }
+            final Intent result = new Intent();
+            result.putExtra(XmppPluginCallbackApi.RESULT_CODE, XmppPluginCallbackApi.RESULT_CODE_ERROR);
+            result.putExtra(XmppPluginCallbackApi.RESULT_ERROR,
+                    new XmppError(XmppError.INCOMPATIBLE_API_VERSIONS, "action not implemented"));
+            return result;
         }
-        data.putExtra(XmppApi.EXTRA_REQUEST_ASCII_ARMOR, true);
+    };
 
-        InputStream is = getInputstream(false);
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
+    public void sendMessage(Intent data) {
+        data.setAction(XmppServiceApi.ACTION_SEND_RAW_XML);
+        data.putExtra(XmppServiceApi.EXTRA_ACCOUNT_JID, accountJid);
+        data.putExtra(XmppServiceApi.EXTRA_RAW_XML, message.getText().toString());
 
-        XmppApi api = new XmppApi(this, mServiceConnection.getService());
-        api.executeApiAsync(data, is, os, new MyCallback(true, os, REQUEST_CODE_ENCRYPT));
+        serviceConnection.getApi().executeApiAsync(data, null, null, new MyCallback(false, null, REQUEST_CODE_SEND_MESSAGE));
     }
 
-    public void signAndEncrypt(Intent data) {
-        data.setAction(XmppApi.ACTION_SIGN_AND_ENCRYPT);
-        data.putExtra(XmppApi.EXTRA_SIGN_KEY_ID, mSignKeyId);
-        if (!TextUtils.isEmpty(mEncryptUserIds.getText().toString())) {
-            data.putExtra(XmppApi.EXTRA_USER_IDS, mEncryptUserIds.getText().toString().split(","));
-        }
-        data.putExtra(XmppApi.EXTRA_REQUEST_ASCII_ARMOR, true);
+    public void registerMessageCallback(Intent data) {
+        data.setAction(XmppServiceApi.ACTION_REGISTER_PLUGIN_CALLBACK);
+        data.putExtra(XmppServiceApi.EXTRA_ACCOUNT_JID, accountJid);
+        data.putExtra(XmppServiceApi.EXTRA_JID_PATTERN, messageCallbackPattern.getText().toString());
 
-        InputStream is = getInputstream(false);
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-
-        XmppApi api = new XmppApi(this, mServiceConnection.getService());
-        api.executeApiAsync(data, is, os, new MyCallback(true, os, REQUEST_CODE_SIGN_AND_ENCRYPT));
-    }
-
-    public void decryptAndVerify(Intent data) {
-        data.setAction(XmppApi.ACTION_DECRYPT_VERIFY);
-
-        InputStream is = getInputstream(true);
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-
-        XmppApi api = new XmppApi(this, mServiceConnection.getService());
-        api.executeApiAsync(data, is, os, new MyCallback(false, os, REQUEST_CODE_DECRYPT_AND_VERIFY));
-    }
-
-    public void decryptAndVerifyDetached(Intent data) {
-        data.setAction(XmppApi.ACTION_DECRYPT_VERIFY);
-        data.putExtra(XmppApi.EXTRA_DETACHED_SIGNATURE, mDetachedSignature.getText().toString().getBytes());
-
-        // use from text from mMessage
-        InputStream is = getInputstream(false);
-
-        XmppApi api = new XmppApi(this, mServiceConnection.getService());
-        api.executeApiAsync(data, is, null, new MyCallback(false, null, REQUEST_CODE_DECRYPT_AND_VERIFY_DETACHED));
-    }
-
-    public void getKey(Intent data) {
-        data.setAction(XmppApi.ACTION_GET_KEY);
-        data.putExtra(XmppApi.EXTRA_KEY_ID, Long.decode(mGetKeyEdit.getText().toString()));
-
-        XmppApi api = new XmppApi(this, mServiceConnection.getService());
-        api.executeApiAsync(data, null, null, new MyCallback(false, null, REQUEST_CODE_GET_KEY));
-    }
-
-    public void getKeyIds(Intent data) {
-        data.setAction(XmppApi.ACTION_GET_KEY_IDS);
-        data.putExtra(XmppApi.EXTRA_USER_IDS, mGetKeyIdsEdit.getText().toString().split(","));
-
-        XmppApi api = new XmppApi(this, mServiceConnection.getService());
-        api.executeApiAsync(data, null, null, new MyCallback(false, null, REQUEST_CODE_GET_KEY_IDS));
-    }
-
-    public void getAnyKeyIds(Intent data) {
-        data.setAction(XmppApi.ACTION_GET_KEY_IDS);
-
-        XmppApi api = new XmppApi(this, mServiceConnection.getService());
-        api.executeApiAsync(data, null, null, new MyCallback(false, null, REQUEST_CODE_GET_KEY_IDS));
-    }
-
-    public void backup(Intent data) {
-        data.setAction(XmppApi.ACTION_BACKUP);
-        data.putExtra(XmppApi.EXTRA_KEY_IDS, new long[]{Long.decode(mGetKeyEdit.getText().toString())});
-        data.putExtra(XmppApi.EXTRA_BACKUP_SECRET, true);
-        data.putExtra(XmppApi.EXTRA_REQUEST_ASCII_ARMOR, true);
-
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-
-        XmppApi api = new XmppApi(this, mServiceConnection.getService());
-        api.executeApiAsync(data, null, os, new MyCallback(true, os, REQUEST_CODE_BACKUP));
+        serviceConnection.getApi().callbackApiAsync(data, pluginCallback, new MyCallback(true, null, REQUEST_CODE_REGISTER_CALLBACK));
     }
 
     @Override
@@ -410,40 +241,8 @@ public class XmppApiActivity extends Activity {
              * interaction, for example selected key ids.
              */
             switch (requestCode) {
-                case REQUEST_CODE_CLEARTEXT_SIGN: {
-                    cleartextSign(data);
-                    break;
-                }
-                case REQUEST_CODE_DETACHED_SIGN: {
-                    detachedSign(data);
-                    break;
-                }
-                case REQUEST_CODE_ENCRYPT: {
-                    encrypt(data);
-                    break;
-                }
-                case REQUEST_CODE_SIGN_AND_ENCRYPT: {
-                    signAndEncrypt(data);
-                    break;
-                }
-                case REQUEST_CODE_DECRYPT_AND_VERIFY: {
-                    decryptAndVerify(data);
-                    break;
-                }
-                case REQUEST_CODE_DECRYPT_AND_VERIFY_DETACHED: {
-                    decryptAndVerifyDetached(data);
-                    break;
-                }
-                case REQUEST_CODE_GET_KEY: {
-                    getKey(data);
-                    break;
-                }
-                case REQUEST_CODE_GET_KEY_IDS: {
-                    getKeyIds(data);
-                    break;
-                }
-                case REQUEST_CODE_BACKUP: {
-                    backup(data);
+                case REQUEST_CODE_SEND_MESSAGE: {
+                    sendMessage(data);
                     break;
                 }
             }
@@ -454,8 +253,8 @@ public class XmppApiActivity extends Activity {
     public void onDestroy() {
         super.onDestroy();
 
-        if (mServiceConnection != null) {
-            mServiceConnection.unbindFromService();
+        if (serviceConnection != null) {
+            serviceConnection.unbindFromService();
         }
     }
 
