@@ -19,6 +19,9 @@ package org.openintents.xmpp;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 public class XmppError implements Parcelable {
     /**
      * Since there might be a case where new versions of the client using the library getting
@@ -31,18 +34,24 @@ public class XmppError implements Parcelable {
     public static final int CLIENT_SIDE_ERROR = -1;
     public static final int GENERIC_ERROR = 0;
     public static final int INCOMPATIBLE_API_VERSIONS = 1;
-    public static final int NO_ACCOUNT_IDS = 2;
+    public static final int NO_ACCOUNT_JIDS = 2;
 
 
-    int errorId;
-    String message;
+    private int errorId;
+    private String message, stacktrace;
 
     public XmppError() {
     }
 
-    public XmppError(int errorId, String message) {
+    public XmppError(final int errorId, final String message) {
         this.errorId = errorId;
         this.message = message;
+    }
+
+    public XmppError(final int errorId, final Throwable e) {
+        this.errorId = errorId;
+        this.message = e.getMessage();
+        setStacktrace(e);
     }
 
     public XmppError(XmppError b) {
@@ -54,16 +63,34 @@ public class XmppError implements Parcelable {
         return errorId;
     }
 
-    public void setErrorId(int errorId) {
+    public XmppError setErrorId(int errorId) {
         this.errorId = errorId;
+        return this;
     }
 
     public String getMessage() {
         return message;
     }
 
-    public void setMessage(String message) {
+    public XmppError setMessage(String message) {
         this.message = message;
+        return this;
+    }
+
+    public String getStacktrace() {
+        return stacktrace;
+    }
+
+    public XmppError setStacktrace(final String stacktrace) {
+        this.stacktrace = stacktrace;
+        return this;
+    }
+
+    public XmppError setStacktrace(final Throwable e) {
+        final StringWriter stacktrace = new StringWriter();
+        e.printStackTrace(new PrintWriter(stacktrace));
+        this.stacktrace = stacktrace.toString();
+        return this;
     }
 
     public int describeContents() {
@@ -84,6 +111,7 @@ public class XmppError implements Parcelable {
         // version 1
         dest.writeInt(errorId);
         dest.writeString(message);
+        dest.writeString(stacktrace);
         // Go back and write the size
         int parcelableSize = dest.dataPosition() - startPosition;
         dest.setDataPosition(sizePosition);
@@ -100,6 +128,7 @@ public class XmppError implements Parcelable {
             XmppError error = new XmppError();
             error.errorId = source.readInt();
             error.message = source.readString();
+            error.stacktrace = source.readString();
 
             // skip over all fields added in future versions of this parcel
             source.setDataPosition(startPosition + parcelableSize);

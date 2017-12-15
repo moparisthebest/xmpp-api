@@ -26,13 +26,15 @@ import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import org.openintents.xmpp.IExecuteService;
 import org.openintents.xmpp.IXmppPluginCallback;
-import org.openintents.xmpp.XmppError;
 import org.openintents.xmpp.XmppPluginCallback;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
+
+import static org.openintents.xmpp.util.XmppUtils.getExceptionError;
 
 public class XmppPluginCallbackApi {
 
@@ -50,12 +52,22 @@ public class XmppPluginCallbackApi {
      * Notify callback of a new message, might be to your account, or from due to carbons or mam, or manual input
      *
      * required extras:
+     * String      EXTRA_ACCOUNT_JID           (JID of sending account)
      * String      EXTRA_MESSAGE_FROM
      * String      EXTRA_MESSAGE_TO
      * String      EXTRA_MESSAGE_BODY
      * int         EXTRA_MESSAGE_STATUS
      */
     public static final String ACTION_NEW_MESSAGE = "org.openintents.xmpp.action.NEW_MESSAGE";
+
+    /**
+     * Notify callback of a IQ response to a ACTION_SEND_RAW_XML you sent with callback
+     *
+     * required extras:
+     * String        EXTRA_ACCOUNT_JID           (JID of receiving account)
+     * String        EXTRA_RAW_XML               (raw XML IQ response)
+     */
+    public static final String ACTION_IQ_RESPONSE = "org.openintents.xmpp.action.IQ_RESPONSE";
 
     // extras:
     public static final String EXTRA_MESSAGE_FROM = "message_from";
@@ -84,21 +96,46 @@ public class XmppPluginCallbackApi {
     protected final IExecuteService executeService;
     protected final Context context;
 
-    private final AtomicInteger mPipeIdGen = new AtomicInteger();
+    protected final String accountJid, localPart, domain;
 
-    public XmppPluginCallbackApi(Context context, XmppPluginCallback service) {
-        this.context = context;
-        this.executeService = service;
+    // this is thread safe, we only need 1
+    private static final AtomicInteger pipeIdGen = new AtomicInteger();
+
+    public XmppPluginCallbackApi(final Context context, final XmppPluginCallback service) {
+        this(context, (IExecuteService)service);
     }
 
-    public XmppPluginCallbackApi(Context context, IXmppPluginCallback service) {
+    public XmppPluginCallbackApi(final Context context, final IXmppPluginCallback service) {
+        this(context, service, null, null, null);
+    }
+
+    public XmppPluginCallbackApi(final Context context, final IXmppPluginCallback service,
+                                 final String accountJid, final String localPart, final String domain) {
+        if(context == null || service == null)
+            throw new NullPointerException("context and service cannot be null");
+        if(accountJid == null)
+            throw new NullPointerException("accountJid must be non-null and non-empty");
+        if(localPart != null && domain == null)
+            throw new NullPointerException("domain cannot be null if localPart is non-null");
         this.context = context;
         this.executeService = XmppPluginCallback.wrap(service);
+        this.accountJid = accountJid;
+        this.localPart = localPart;
+        this.domain = domain;
     }
 
-    protected XmppPluginCallbackApi(Context context, IExecuteService service) {
+    protected XmppPluginCallbackApi(final Context context, final IExecuteService service) {
+        if(context == null || service == null)
+            throw new NullPointerException("context and service cannot be null");
         this.context = context;
         this.executeService = service;
+        this.accountJid = this.localPart = this.domain = null;
+    }
+
+    public boolean matches(final String accountJid, final String localPart, final String domain) {
+        return (this.accountJid == null || this.accountJid.equals(accountJid)) &&
+                (this.localPart == null || this.localPart.equals(localPart)) &&
+                (this.domain == null || this.domain.equals(domain));
     }
 
     /**
@@ -182,7 +219,7 @@ public class XmppPluginCallbackApi {
             int outputPipeId = 0;
 
             if (os != null) {
-                outputPipeId = mPipeIdGen.incrementAndGet();
+                outputPipeId = pipeIdGen.incrementAndGet();
                 output = executeService.createOutputPipe(outputPipeId);
                 pumpThread = ParcelFileDescriptorUtil.pipeTo(os, output);
             }
@@ -221,10 +258,6 @@ public class XmppPluginCallbackApi {
 
     protected Intent getErrorIntent(final boolean callback, final Exception e) {
         Log.e(XmppPluginCallbackApi.TAG, callback ? "Exception in callbackApi call" : "Exception in executeApi call", e);
-        Intent result = new Intent();
-        result.putExtra(RESULT_CODE, RESULT_CODE_ERROR);
-        result.putExtra(RESULT_ERROR,
-                new XmppError(XmppError.CLIENT_SIDE_ERROR, e.getMessage()));
-        return result;
+        return getExceptionError(e);
     }
 }

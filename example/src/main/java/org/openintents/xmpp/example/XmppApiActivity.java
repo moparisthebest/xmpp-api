@@ -42,7 +42,7 @@ import java.util.Locale;
 
 public class XmppApiActivity extends Activity {
     private EditText message;
-    private EditText messageCallbackPattern;
+    private EditText messageCallbackLocalPart, messageCallbackDomain;
 
     private XmppServiceConnection serviceConnection;
 
@@ -58,7 +58,8 @@ public class XmppApiActivity extends Activity {
 
         message = (EditText) findViewById(R.id.message);
         Button sendMessage = (Button) findViewById(R.id.send_message);
-        messageCallbackPattern = (EditText) findViewById(R.id.message_callback_pattern);
+        messageCallbackLocalPart = (EditText) findViewById(R.id.message_callback_localpart);
+        messageCallbackDomain = (EditText) findViewById(R.id.message_callback_domain);
         Button registerMessageCallback = (Button) findViewById(R.id.register_message_callback);
 
         sendMessage.setOnClickListener(new View.OnClickListener() {
@@ -222,7 +223,12 @@ public class XmppApiActivity extends Activity {
     public void registerMessageCallback(Intent data) {
         data.setAction(XmppServiceApi.ACTION_REGISTER_PLUGIN_CALLBACK);
         data.putExtra(XmppServiceApi.EXTRA_ACCOUNT_JID, accountJid);
-        data.putExtra(XmppServiceApi.EXTRA_JID_PATTERN, messageCallbackPattern.getText().toString());
+        final String localPart = messageCallbackLocalPart.getText().toString().trim();
+        final String domain = messageCallbackDomain.getText().toString().trim();
+        if(!localPart.isEmpty())
+            data.putExtra(XmppServiceApi.EXTRA_JID_LOCAL_PART, localPart);
+        if(!domain.isEmpty())
+            data.putExtra(XmppServiceApi.EXTRA_JID_DOMAIN, domain);
 
         serviceConnection.getApi().callbackApiAsync(data, pluginCallback, new MyCallback(true, null, REQUEST_CODE_REGISTER_CALLBACK));
     }

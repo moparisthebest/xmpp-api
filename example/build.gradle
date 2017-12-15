@@ -13,8 +13,8 @@ android {
         minSdkVersion 9
         targetSdkVersion 23
         applicationId 'org.openintents.xmpp.example'
-        versionCode 6
-        versionName '7.0'
+        versionCode 1
+        versionName '1.0'
     }
 
     // Do not abort build if lint finds errors

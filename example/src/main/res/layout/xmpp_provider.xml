@@ -48,10 +48,16 @@
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:id="@+id/message_callback_localpart" />
+
+        <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="*@echo.burtrum.org"
-            android:id="@+id/message_callback_pattern" />
+            android:text="echo.burtrum.org"
+            android:id="@+id/message_callback_domain" />
 
         <Button
             android:id="@+id/register_message_callback"

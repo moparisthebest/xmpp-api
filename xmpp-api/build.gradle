@@ -22,7 +22,7 @@ publish {
     userOrg = 'moparisthebest'
     groupId = 'com.moparisthebest'
     artifactId = 'xmpp-api'
-    version = '1.0'
+    version = '1.0-SNAPSHOT'
     description = 'The XMPP API provides methods to execute XMPP operations, such as recieve, send, and more without user interaction from background threads.'
     website = 'https://github.com/moparisthebest/xmpp-api'
 }

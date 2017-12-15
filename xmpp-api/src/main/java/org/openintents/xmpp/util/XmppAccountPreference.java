@@ -36,7 +36,6 @@ public class XmppAccountPreference extends Preference {
     private String accountJid;
     private String xmppProvider;
     private XmppServiceConnection serviceConnection;
-    private String preferredJid;
 
     public static final int REQUEST_CODE_ACCOUNT_PREFERENCE = 9999;
 
@@ -47,7 +46,7 @@ public class XmppAccountPreference extends Preference {
     @Override
     public CharSequence getSummary() {
         return (accountJid == null) ? getContext().getString(R.string.xmpp_no_account_selected)
-                : getContext().getString(R.string.xmpp_account_selected);
+                : getContext().getString(R.string.xmpp_account_selected, accountJid);
     }
 
     private void updateEnabled() {
@@ -61,10 +60,6 @@ public class XmppAccountPreference extends Preference {
     public void setXmppProvider(String packageName) {
         xmppProvider = packageName;
         updateEnabled();
-    }
-
-    public void setDefaultUserId(String userId) {
-        preferredJid = userId;
     }
 
     @Override
@@ -91,7 +86,6 @@ public class XmppAccountPreference extends Preference {
 
     private void getAccountId(Intent data) {
         data.setAction(XmppServiceApi.ACTION_GET_ACCOUNT_JID);
-        data.putExtra(XmppServiceApi.EXTRA_ACCOUNT_JID, preferredJid);
 
         serviceConnection.getApi().executeApiAsync(data, null, null, new MyCallback(REQUEST_CODE_ACCOUNT_PREFERENCE));
     }
@@ -208,7 +202,6 @@ public class XmppAccountPreference extends Preference {
         final SavedState myState = new SavedState(superState);
         myState.accountJid = accountJid;
         myState.xmppProvider = xmppProvider;
-        myState.preferredJid = preferredJid;
         return myState;
     }
 
@@ -225,7 +218,6 @@ public class XmppAccountPreference extends Preference {
         super.onRestoreInstanceState(myState.getSuperState());
         accountJid = myState.accountJid;
         xmppProvider = myState.xmppProvider;
-        preferredJid = myState.preferredJid;
         notifyChanged();
     }
 

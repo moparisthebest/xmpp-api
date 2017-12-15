@@ -26,8 +26,8 @@ import org.openintents.xmpp.util.XmppAppPreference;
 import org.openintents.xmpp.util.XmppAccountPreference;
 
 public class BaseActivity extends PreferenceActivity {
-    XmppAccountPreference mKey;
-    XmppAppPreference mProvider;
+    XmppAccountPreference accountPreference;
+    XmppAppPreference appPreference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,8 +38,8 @@ public class BaseActivity extends PreferenceActivity {
 
         // find preferences
         Preference xmppApi = findPreference("xmpp_provider_demo");
-        mProvider = (XmppAppPreference) findPreference("xmpp_provider_list");
-        mKey = (XmppAccountPreference) findPreference("xmpp_key");
+        appPreference = (XmppAppPreference) findPreference("xmpp_provider_list");
+        accountPreference = (XmppAccountPreference) findPreference("xmpp_key");
 
         xmppApi.setOnPreferenceClickListener(new OnPreferenceClickListener() {
             @Override
@@ -50,21 +50,20 @@ public class BaseActivity extends PreferenceActivity {
             }
         });
 
-        mKey.setXmppProvider(mProvider.getValue());
-        mProvider.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+        accountPreference.setXmppProvider(appPreference.getValue());
+        appPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                mKey.setXmppProvider((String) newValue);
+                accountPreference.setXmppProvider((String) newValue);
                 return true;
             }
         });
-        mKey.setDefaultUserId("Alice <alice@example.com>");
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (mKey.handleOnActivityResult(requestCode, resultCode, data)) {
+        if (accountPreference.handleOnActivityResult(requestCode, resultCode, data)) {
             // handled by XmppKeyPreference
             return;
         }

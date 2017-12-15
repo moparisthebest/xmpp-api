@@ -40,6 +40,14 @@ public class XmppServiceApi extends XmppPluginCallbackApi {
      */
 
     /**
+     * Get all versions of the API the provider supports
+     *
+     * returned extras:
+     * int[]        EXTRA_SUPPORTED_VERSIONS
+     */
+    public static final String ACTION_GET_SUPPORTED_VERSIONS = "org.openintents.xmpp.action.GET_SUPPORTED_VERSIONS";
+
+    /**
      * This action performs no operation, but can be used to check if the App has permission
      * to access the API in general, returning a user interaction PendingIntent otherwise.
      * This can be used to trigger the permission dialog explicitly.
@@ -50,6 +58,8 @@ public class XmppServiceApi extends XmppPluginCallbackApi {
 
     /**
      * Send arbitrary raw XML using chosen account
+     *
+     * if sending IQ, can request callback by sending IXmppPluginCallback to callback, ignored otherwise
      * 
      * required extras:
      * String        EXTRA_ACCOUNT_JID           (JID of sending account)
@@ -62,7 +72,10 @@ public class XmppServiceApi extends XmppPluginCallbackApi {
      *
      * required extras:
      * String        EXTRA_ACCOUNT_JID           (JID of associated account)
-     * String        EXTRA_JID_PATTERN           (pattern to match JID of conversation partner)
+     *
+     * optional extras:
+     * String        EXTRA_JID_DOMAIN            (to match JID domain of conversation partner)
+     * String        EXTRA_JID_LOCAL_PART        (to match JID localpart of conversation partner, cannot supply without domain)
      *
      * Must use callback method and send in callback
      */
@@ -80,9 +93,11 @@ public class XmppServiceApi extends XmppPluginCallbackApi {
     public static final String ACTION_GET_ACCOUNT_JID = "org.openintents.xmpp.action.GET_ACCOUNT_JID";
 
     // extras:
+    public static final String EXTRA_SUPPORTED_VERSIONS = "supported_versions";
     public static final String EXTRA_ACCOUNT_JID = "account_jid";
     public static final String EXTRA_RAW_XML = "raw_xml";
-    public static final String EXTRA_JID_PATTERN = "jid_pattern";
+    public static final String EXTRA_JID_DOMAIN = "jid_domain";
+    public static final String EXTRA_JID_LOCAL_PART = "jid_local_part";
 
     private final XmppService xmppService;
 
@@ -133,7 +148,7 @@ public class XmppServiceApi extends XmppPluginCallbackApi {
 
             return result;
         } catch (Exception e) {
-            return getErrorIntent(false, e);
+            return getErrorIntent(true, e);
         }
     }
 

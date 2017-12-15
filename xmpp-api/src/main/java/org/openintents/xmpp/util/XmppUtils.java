@@ -16,11 +16,16 @@
 
 package org.openintents.xmpp.util;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
 
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ResolveInfo;
+import org.openintents.xmpp.XmppError;
+
+import static org.openintents.xmpp.util.XmppPluginCallbackApi.*;
 
 public class XmppUtils {
 
@@ -28,6 +33,27 @@ public class XmppUtils {
         Intent intent = new Intent(XmppServiceApi.SERVICE_INTENT);
         List<ResolveInfo> resInfo = context.getPackageManager().queryIntentServices(intent, 0);
         return !resInfo.isEmpty();
+    }
+
+    public static Intent getSuccess() {
+        final Intent result = new Intent();
+        result.putExtra(RESULT_CODE, RESULT_CODE_SUCCESS);
+        return result;
+    }
+
+    public static Intent getError(final int errorId, final String message) {
+        final Intent result = new Intent();
+        final XmppError error = new XmppError(errorId, message);
+        result.putExtra(RESULT_ERROR, error);
+        result.putExtra(RESULT_CODE, RESULT_CODE_ERROR);
+        return result;
+    }
+
+    public static Intent getExceptionError(final Exception e) {
+        final Intent result = new Intent();
+        result.putExtra(RESULT_ERROR, new XmppError(XmppError.GENERIC_ERROR, e));
+        result.putExtra(RESULT_CODE, RESULT_CODE_ERROR);
+        return result;
     }
 
 }
