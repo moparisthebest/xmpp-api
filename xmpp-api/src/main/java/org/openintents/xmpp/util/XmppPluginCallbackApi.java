@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import org.openintents.xmpp.IExecuteService;
@@ -36,7 +37,7 @@ import java.util.regex.Pattern;
 
 import static org.openintents.xmpp.util.XmppUtils.getExceptionError;
 
-public class XmppPluginCallbackApi {
+public class XmppPluginCallbackApi implements android.os.IInterface {
 
     public static final String TAG = "Xmpp API";
 
@@ -144,6 +145,11 @@ public class XmppPluginCallbackApi {
      */
     public XmppPluginCallback getXmppPluginCallback() {
         return (XmppPluginCallback) executeService;
+    }
+
+    @Override
+    public IBinder asBinder() {
+        return ((android.os.IInterface)executeService).asBinder();
     }
 
     protected class XmppAsyncTask extends AsyncTask<Void, Integer, Intent> {

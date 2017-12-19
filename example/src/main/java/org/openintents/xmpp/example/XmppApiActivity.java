@@ -50,6 +50,7 @@ public class XmppApiActivity extends Activity {
 
     public static final int REQUEST_CODE_SEND_MESSAGE = 9910;
     public static final int REQUEST_CODE_REGISTER_CALLBACK = 9915;
+    public static final int REQUEST_CODE_UNREGISTER_CALLBACK = 9920;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -61,6 +62,7 @@ public class XmppApiActivity extends Activity {
         messageCallbackLocalPart = (EditText) findViewById(R.id.message_callback_localpart);
         messageCallbackDomain = (EditText) findViewById(R.id.message_callback_domain);
         Button registerMessageCallback = (Button) findViewById(R.id.register_message_callback);
+        Button unRegisterMessageCallback = (Button) findViewById(R.id.unregister_message_callback);
 
         sendMessage.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -72,6 +74,12 @@ public class XmppApiActivity extends Activity {
             @Override
             public void onClick(View v) {
                 registerMessageCallback(new Intent());
+            }
+        });
+        unRegisterMessageCallback.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                unRegisterMessageCallback(new Intent());
             }
         });
 
@@ -87,11 +95,11 @@ public class XmppApiActivity extends Activity {
         } else {
 
             // set interesting default text
-            message.setText("<message xmlns=\"jabber:client\" to=\"test@echo.burtrum.org\" type=\"normal\" id=\"9316996e-88da-4d6b-9bb6-6ff19c096a2c\" from=\""+accountJid+"\">\n" +
+            message.setText("<message xmlns=\"jabber:client\" to=\"test@echo.burtrum.org\" type=\"normal\" from=\""+accountJid+"\">\n" +
                     "  <echo xmlns=\"https://code.moparisthebest.com/moparisthebest/xmpp-echo-self\"/>\n" +
                     "    <forwarded xmlns=\"urn:xmpp:forward:0\">\n" +
-                    "        <message xmlns=\"jabber:client\" from=\"test@echo.burtrum.org\" type=\"chat\" id=\"9316996e-88da-4d6b-9bb6-6ff19c096a2b\" to=\""+accountJid+"\">\n" +
-                    "            <body>Now is "+new Date()+"</body>\n" +
+                    "        <message xmlns=\"jabber:client\" from=\"test@echo.burtrum.org\" type=\"chat\" to=\""+accountJid+"\">\n" +
+                    "            <body>Now is ${date}</body>\n" +
                     "        </message>\n" +
                     "    </forwarded>\n" +
                     "</message>");
@@ -215,7 +223,7 @@ public class XmppApiActivity extends Activity {
     public void sendMessage(Intent data) {
         data.setAction(XmppServiceApi.ACTION_SEND_RAW_XML);
         data.putExtra(XmppServiceApi.EXTRA_ACCOUNT_JID, accountJid);
-        data.putExtra(XmppServiceApi.EXTRA_RAW_XML, message.getText().toString());
+        data.putExtra(XmppServiceApi.EXTRA_RAW_XML, message.getText().toString().replace("${date}", new Date().toString()));
 
         serviceConnection.getApi().executeApiAsync(data, null, null, new MyCallback(false, null, REQUEST_CODE_SEND_MESSAGE));
     }
@@ -231,6 +239,12 @@ public class XmppApiActivity extends Activity {
             data.putExtra(XmppServiceApi.EXTRA_JID_DOMAIN, domain);
 
         serviceConnection.getApi().callbackApiAsync(data, pluginCallback, new MyCallback(true, null, REQUEST_CODE_REGISTER_CALLBACK));
+    }
+
+    public void unRegisterMessageCallback(Intent data) {
+        data.setAction(XmppServiceApi.ACTION_UNREGISTER_PLUGIN_CALLBACK);
+        data.putExtra(XmppServiceApi.EXTRA_ACCOUNT_JID, accountJid);
+        serviceConnection.getApi().callbackApiAsync(data, pluginCallback, new MyCallback(true, null, REQUEST_CODE_UNREGISTER_CALLBACK));
     }
 
     @Override

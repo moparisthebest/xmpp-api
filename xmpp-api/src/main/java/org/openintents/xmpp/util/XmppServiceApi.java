@@ -57,7 +57,7 @@ public class XmppServiceApi extends XmppPluginCallbackApi {
     public static final String ACTION_CHECK_PERMISSION = "org.openintents.xmpp.action.CHECK_PERMISSION";
 
     /**
-     * Send arbitrary raw XML using chosen account
+     * Send arbitrary raw XML using chosen account, only one element at a time (single stanza or nonza)
      *
      * if sending IQ, can request callback by sending IXmppPluginCallback to callback, ignored otherwise
      * 
@@ -68,7 +68,7 @@ public class XmppServiceApi extends XmppPluginCallbackApi {
     public static final String ACTION_SEND_RAW_XML = "org.openintents.xmpp.action.SEND_RAW_XML";
 
     /**
-     * Send arbitrary raw XML using chosen account
+     * Register a plugin callback to receive messages matching a certain domain and/or local part
      *
      * required extras:
      * String        EXTRA_ACCOUNT_JID           (JID of associated account)
@@ -80,6 +80,16 @@ public class XmppServiceApi extends XmppPluginCallbackApi {
      * Must use callback method and send in callback
      */
     public static final String ACTION_REGISTER_PLUGIN_CALLBACK = "org.openintents.xmpp.action.REGISTER_PLUGIN_CALLBACK";
+
+    /**
+     * Unregister a previously registered plugin callback
+     *
+     * required extras:
+     * String        EXTRA_ACCOUNT_JID           (JID of associated account)
+     *
+     * Must use callback method and send in callback
+     */
+    public static final String ACTION_UNREGISTER_PLUGIN_CALLBACK = "org.openintents.xmpp.action.UNREGISTER_PLUGIN_CALLBACK";
 
     /**
      * Select key id for signing
